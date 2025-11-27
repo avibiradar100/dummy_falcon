@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: efalcon-postgres
+    environment:
+      POSTGRES_DB: efalcon_db
+      POSTGRES_USER: efalcon
+      POSTGRES_PASSWORD: efalcon123
+    ports:
+      - "5433:5432"
+    volumes:
+      - efalcon_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U efalcon"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: efalcon-api
+    ports:
+      - "8081:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: efalcon_db
+      DB_USER: efalcon
+      DB_PASS: efalcon123
+      PORT: 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  efalcon_pgdata:
